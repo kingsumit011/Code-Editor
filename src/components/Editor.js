@@ -11,7 +11,7 @@ const Editor = () => {
     useEffect(() => {
         const abortController = new AbortController();
         async function init(){
-            console.log("called");
+            // console.log("called");
 
             CodeMirror.fromTextArea(document.getElementById('RealTimeEditor'), {
                 mode: {name: "javascript", json: true},

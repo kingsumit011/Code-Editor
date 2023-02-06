@@ -1,14 +1,65 @@
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
+import ACTIONS from '../Action';
 import Client from '../components/Client'
-import Editor from '../components/Editor';
+import Editor from '../components/Editor'
+import {Navigate, useLocation , useNavigate, useParams} from 'react-router-dom'
+import { initSocket } from '../Socket';
+import { toast } from 'react-hot-toast';
+
 
 const EditorPage = () => {
-  const [clients , setClinets] = useState([
-    {socketId : 1 , userName : 'user 1'},
-    {socketId : 3 , userName : 'user 3'},
-    {socketId : 2 , userName : 'user 2 '},
-    {socketId : 4 , userName : 'user 4 '},
-  ]);
+
+  const socketRef = useRef(null);
+  const location = useLocation();
+  const params = useParams();
+  const roomId = params.roomId;
+  const reactNaviagator = useNavigate();
+  const [clients , setClinets] = useState([]);
+
+
+
+
+  useEffect(() => {
+    const init = async () => {
+      socketRef.current = await initSocket();
+      socketRef.current.on('connection_error', (err) => handleError(err) );
+      socketRef.current.on('connection_failed', (err) => handleError(err) );
+      function handleError(err) {
+        console.log('error' , err);
+        toast.error('Socket connection failed , Try Again Later')
+        reactNaviagator("/")
+      }
+      // console.log('roomId',roomId);
+      //Emit for Joining the room
+      socketRef.current.emit(ACTIONS.JOIN, {
+        roomId,
+        userName: location.state?.userName, 
+      });
+
+      //Listen for the joined event
+      socketRef.current.on(ACTIONS.JOINED, ({
+        clients,
+        userName ,
+        socketId}) => {
+          console.log('${userName}joined the room' , userName)
+          console.log('${clients} joined the room' , clients)
+          if(userName !== location.state?.userName) {
+            toast.success(`${userName} joined the room`)
+          }
+          setClinets(clients)
+        })
+    
+    }
+    init();
+  } ,[])
+
+
+
+
+  if(!location.state||!location.state?.userName) {
+    return <Navigate to='/'/>
+  }
+
   return (
     <div className='editorPageWrapper'>
       <div className='aside'>

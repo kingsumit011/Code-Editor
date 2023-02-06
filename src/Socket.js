@@ -8,5 +8,6 @@ export const initSocket = async () => {
         'reconnectionAttempts': 'Infinitty',
         'timeout': 10000,
     }
+    // console.log("URL" , process.env.REACT_APP_BACKEND_URL)
     return io(process.env.REACT_APP_BACKEND_URL, option)
 }
